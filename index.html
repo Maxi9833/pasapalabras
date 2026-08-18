@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pasapalabra Extremo</title>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --accent-yellow: #f59e0b;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .game-container {
+            width: 90%;
+            max-width: 850px;
+            background-color: var(--card-bg);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+            text-align: center;
+            position: relative;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .match-panel {
+            display: flex;
+            gap: 20px;
+            background-color: #0f172a;
+            padding: 10px 20px;
+            border-radius: 12px;
+            border: 2px solid #334155;
+        }
+
+        .player-score-box {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .player-score-box.you { color: var(--accent-green); }
+        .player-score-box.rival { color: var(--accent-yellow); }
+
+        .score-val { font-size: 1.4rem; font-weight: bold; }
+
+        .timer {
+            font-size: 1.8rem;
+            font-weight: bold;
+            background-color: #334155;
+            padding: 10px 20px;
+            border-radius: 10px;
+            color: var(--accent-yellow);
+        }
+
+        .setup-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 20px 0;
+        }
+
+        .theme-select {
+            padding: 10px 15px;
+            font-size: 1rem;
+            border-radius: 8px;
+            background-color: #0f172a;
+            color: white;
+            border: 2px solid #334155;
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn-mode {
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 12px;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-solo { background-color: var(--accent-blue); color: white; }
+        .btn-multi { background-color: var(--accent-purple); color: white; }
+        .btn-mode:hover { transform: scale(1.05); }
+
+        .rosco-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            margin: 0 auto 30px auto;
+        }
+
+        .letter-node {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-color: #334155;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            transition: all 0.3s ease;
+        }
+
+        .letter-node.current {
+            background-color: var(--accent-yellow);
+            color: black;
+            transform: scale(1.25);
+            box-shadow: 0 0 15px var(--accent-yellow);
+        }
+
+        .letter-node.correct { background-color: var(--accent-green); }
+        .letter-node.wrong { background-color: var(--accent-red); }
+
+        .powerups {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .btn-powerup {
+            background-color: var(--accent-purple);
+            color: white;
+            padding: 8px 14px;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-powerup:disabled {
+            background-color: #475569;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .question-box {
+            background-color: #0f172a;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            min-height: 90px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.15rem;
+            border: 2px solid transparent;
+        }
+
+        .hint-text {
+            color: var(--accent-yellow);
+            font-size: 0.95rem;
+            margin-top: 8px;
+            font-weight: bold;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        input[type="text"] {
+            padding: 12px 20px;
+            font-size: 1.1rem;
+            border-radius: 8px;
+            border: 2px solid #334155;
+            background-color: #0f172a;
+            color: white;
+            outline: none;
+            flex-grow: 1;
+            max-width: 300px;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: bold;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .btn-submit { background-color: var(--accent-green); color: white; }
+        .btn-pasapalabra { background-color: var(--accent-yellow); color: black; }
+
+        .answers-review {
+            text-align: left;
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            background-color: #0f172a;
+            padding: 15px;
+            border-radius: 10px;
+            width: 100%;
+        }
+
+        .review-item {
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 4px;
+        }
+
+        .review-item.wrong-item { color: var(--accent-red); }
+        .review-item.correct-item { color: var(--accent-green); }
+    </style>
+</head>
+<body>
+
+<div class="game-container">
+    <header>
+        <h2>Pasapalabra Extremo 🔤</h2>
+        <div class="match-panel" id="match-panel" style="display: none;">
+            <div class="player-score-box you">
+                <span id="my-name-display">👤 Tú</span>
+                <span class="score-val" id="my-score">0 pts</span>
+            </div>
+            <div id="vs-divider" style="font-size: 1.5rem; align-self: center; display: none;">⚔️ VS</div>
+            <div class="player-score-box rival" id="rival-box" style="display: none;">
+                <span id="rival-name-display">👾 Rival</span>
+                <span class="score-val" id="rival-score">0 pts</span>
+            </div>
+        </div>
+        <div class="timer-container" id="timer-box" style="display: none;">
+            <div class="timer" id="timer">⏱️ 120s</div>
+        </div>
+    </header>
+
+    <!-- PANTALLA 1: Configuración de Tema y Modo -->
+    <div class="setup-section" id="mode-selector">
+        <h3>1. Elige una Temática:</h3>
+        <select id="theme-selector" class="theme-select">
+            <option value="ciencia">🔬 Ciencia y Naturaleza</option>
+            <option value="general">🌍 Cultura General</option>
+            <option value="cine">🎬 Entretenimiento y Cine</option>
+        </select>
+
+        <h3>2. Elige el Modo de Juego:</h3>
+        <div class="mode-buttons">
+            <button class="btn-mode btn-solo" onclick="startSinglePlayer()">👤 Modo Solitario</button>
+            <button class="btn-mode btn-multi" onclick="showLobby()">⚔️ Modo Multijugador</button>
+        </div>
+    </div>
+
+    <!-- PANTALLA 2: Registro Multijugador -->
+    <div class="setup-section" id="lobby-screen" style="display: none;">
+        <h3>⚔️ Sala Multijugador</h3>
+        <input type="text" id="player-name" placeholder="Tu Nombre o Apodo">
+        <button class="btn-submit" onclick="joinMultiplayer()">Buscar Partida 🔍</button>
+        <p id="lobby-status" style="color: var(--accent-yellow); font-weight: bold;"></p>
+        <button onclick="backToMenu()" style="background: transparent; color: #94a3b8; text-decoration: underline;">⬅️ Volver</button>
+    </div>
+
+    <!-- PANTALLA 3: Tablero de Juego -->
+    <div id="game-main" style="display: none;">
+        <div class="powerups">
+            <button class="btn-powerup" id="btn-hint" onclick="useHint()">💡 Revelar Letra (-10s)</button>
+            <button class="btn-powerup" id="btn-freeze" onclick="useFreeze()">❄️ Congelar 10s</button>
+        </div>
+
+        <div class="rosco-container" id="rosco"></div>
+
+        <div id="game-board">
+            <div class="question-box">
+                <div id="question">Cargando...</div>
+                <div class="hint-text" id="hint-display"></div>
+            </div>
+
+            <div class="controls">
+                <input type="text" id="answer-input" placeholder="Escribe tu respuesta..." autocomplete="off">
+                <button class="btn-submit" onclick="checkAnswer()">Responder 🎯</button>
+                <button class="btn-pasapalabra" onclick="pasapalabra()">Pasapalabra 🔄</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- PANTALLA 4: Resultados y Revisión -->
+    <div class="setup-section" id="end-screen" style="display: none;">
+        <h3 id="end-title">🏆 ¡Fin de la Partida!</h3>
+        <div id="final-stats" style="font-size: 1.2rem;"></div>
+        
+        <h4 style="margin-top: 15px; margin-bottom: 5px;">📖 Repaso de Respuestas:</h4>
+        <div class="answers-review" id="answers-review"></div>
+
+        <button class="btn-submit" onclick="location.reload()" style="margin-top: 15px;">🔄 Jugar de Nuevo</button>
+    </div>
+</div>
+
+<script>
+    let socket = null;
+    let isMultiplayer = false;
+    let currentGameId = null;
+
+    const themesData = {
+        ciencia: [
+            { letter: 'A', question: 'Empieza por A: Vaso sanguíneo que lleva sangre desde el corazón.', answer: 'arteria' },
+            { letter: 'B', question: 'Empieza por B: El mamífero más grande del planeta.', answer: 'ballena' },
+            { letter: 'C', question: 'Empieza por C: Unidad básica de todos los seres vivos.', answer: 'celula' },
+            { letter: 'D', question: 'Empieza por D: Reptiles extintos de la era Mesozoica.', answer: 'dinosaurio' },
+            { letter: 'E', question: 'Empieza por E: Esfera de gas que genera luz por fusión nuclear.', answer: 'estrella' }
+        ],
+        general: [
+            { letter: 'A', question: 'Empieza por A: Océano que separa América de Europa y África.', answer: 'atlantico' },
+            { letter: 'B', question: 'Empieza por B: Capital de Argentina.', answer: 'buenos aires' },
+            { letter: 'C', question: 'Empieza por C: País cuya capital es Ottawa.', answer: 'canada' },
+            { letter: 'D', question: 'Empieza por D: Moneda oficial de los Estados Unidos.', answer: 'dolar' },
+            { letter: 'E', question: 'Empieza por E: Montaña más alta del mundo sobre el nivel del mar.', answer: 'everest' }
+        ],
+        cine: [
+            { letter: 'A', question: 'Empieza por A: Película con la mayor recaudación de la historia (Na\'vi).', answer: 'avatar' },
+            { letter: 'B', question: 'Empieza por B: El caballero de la noche en Gotham.', answer: 'batman' },
+            { letter: 'C', question: 'Empieza por C: Nombre del robot dorado en Star Wars.', answer: 'c3po' },
+            { letter: 'D', question: 'Empieza por D: Estudio de animación famoso por Mickey Mouse.', answer: 'disney' },
+            { letter: 'E', question: 'Empieza por E: Extraterrestre que quería llamar a su casa.', answer: 'et' }
+        ]
+    };
+
+    let questions = [];
+    let currentIndex = 0;
+    let timeLeft = 120;
+    let hits = 0;
+    let errors = 0;
+    let timerInterval = null;
+    let freezeActive = false;
+    let userAnswers = {}; // Guardar las respuestas ingresadas
+
+    function normalizeText(text) {
+        return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    }
+
+    function getSelectedQuestions() {
+        const selectedTheme = document.getElementById('theme-selector').value;
+        return JSON.parse(JSON.stringify(themesData[selectedTheme]));
+    }
+
+    function startSinglePlayer() {
+        isMultiplayer = false;
+        questions = getSelectedQuestions();
+        
+        document.getElementById('mode-selector').style.display = 'none';
+        document.getElementById('match-panel').style.display = 'flex';
+        document.getElementById('timer-box').style.display = 'block';
+        document.getElementById('game-main').style.display = 'block';
+
+        initRosco();
+    }
+
+    function showLobby() {
+        document.getElementById('mode-selector').style.display = 'none';
+        document.getElementById('lobby-screen').style.display = 'flex';
+    }
+
+    function backToMenu() {
+        document.getElementById('lobby-screen').style.display = 'none';
+        document.getElementById('mode-selector').style.display = 'flex';
+    }
+
+    function joinMultiplayer() {
+        const name = document.getElementById('player-name').value.trim();
+        if (!name) return alert("Escribe un nombre");
+
+        isMultiplayer = true;
+        questions = getSelectedQuestions();
+        document.getElementById('my-name-display').innerText = `👤 ${name}`;
+        document.getElementById('lobby-status').innerText = "Conectando al servidor...";
+
+        if (typeof io !== 'undefined') {
+            // Intentar conectar con el servidor backend
+            socket = io();
+
+            socket.on('connect', () => {
+                socket.emit('join_game', { name: name, theme: document.getElementById('theme-selector').value });
+            });
+
+            socket.on('waiting_for_opponent', () => {
+                document.getElementById('lobby-status').innerText = "Esperando oponente...";
+            });
+
+            socket.on('start_match', (data) => {
+                currentGameId = data.gameId;
+                Object.keys(data.players).forEach(id => {
+                    if (id !== socket.id) document.getElementById('rival-name-display').innerText = `👾 ${data.players[id]}`;
+                });
+
+                document.getElementById('lobby-screen').style.display = 'none';
+                document.getElementById('match-panel').style.display = 'flex';
+                document.getElementById('vs-divider').style.display = 'block';
+                document.getElementById('rival-box').style.display = 'flex';
+                document.getElementById('timer-box').style.display = 'block';
+                document.getElementById('game-main').style.display = 'block';
+
+                initRosco();
+            });
+
+            socket.on('player_progress', (data) => {
+                document.getElementById('rival-score').innerText = `${data.score} pts`;
+            });
+
+            socket.on('connect_error', () => {
+                document.getElementById('lobby-status').innerText = "❌ No se pudo conectar al servidor Node.js. ¿Está corriendo server.js?";
+            });
+        } else {
+            alert("Error: No se pudo cargar Socket.io.");
+        }
+    }
+
+    function initRosco() {
+        const container = document.getElementById('rosco');
+        container.innerHTML = '';
+        const total = questions.length;
+        const radius = 130;
+
+        questions.forEach((q, index) => {
+            const angle = (index / total) * 2 * Math.PI - (Math.PI / 2);
+            const x = Math.round(140 + radius * Math.cos(angle));
+            const y = Math.round(140 + radius * Math.sin(angle));
+
+            const node = document.createElement('div');
+            node.className = 'letter-node';
+            node.id = `node-${q.letter}`;
+            node.innerText = q.letter;
+            node.style.left = `${x}px`;
+            node.style.top = `${y}px`;
+            container.appendChild(node);
+        });
+
+        startTimer();
+        loadQuestion();
+    }
+
+    function loadQuestion() {
+        if (checkGameEnd()) return;
+
+        document.querySelectorAll('.letter-node').forEach(n => n.classList.remove('current'));
+
+        let attempts = 0;
+        while ((questions[currentIndex].status === 'correct' || questions[currentIndex].status === 'wrong') && attempts < questions.length) {
+            currentIndex = (currentIndex + 1) % questions.length;
+            attempts++;
+        }
+
+        if (checkGameEnd()) return;
+
+        const q = questions[currentIndex];
+        document.getElementById(`node-${q.letter}`).classList.add('current');
+        document.getElementById('question').innerText = q.question;
+        document.getElementById('hint-display').innerText = '';
+        document.getElementById('answer-input').value = '';
+        document.getElementById('answer-input').focus();
+    }
+
+    function checkAnswer() {
+        const input = document.getElementById('answer-input').value;
+        if (!input) return;
+
+        const currentQ = questions[currentIndex];
+        const isCorrect = normalizeText(input) === normalizeText(currentQ.answer);
+        const node = document.getElementById(`node-${currentQ.letter}`);
+
+        userAnswers[currentQ.letter] = {
+            input: input,
+            correctAnswer: currentQ.answer,
+            isCorrect: isCorrect
+        };
+
+        if (isCorrect) {
+            currentQ.status = 'correct';
+            node.classList.add('correct');
+            hits++;
+        } else {
+            currentQ.status = 'wrong';
+            node.classList.add('wrong');
+            errors++;
+            timeLeft = Math.max(0, timeLeft - 5);
+        }
+
+        const currentScore = hits * 10;
+        document.getElementById('my-score').innerText = `${currentScore} pts`;
+
+        if (isMultiplayer && socket) {
+            socket.emit('submit_answer', { gameId: currentGameId, score: currentScore });
+        }
+
+        nextQuestion();
+    }
+
+    function useHint() {
+        if (timeLeft <= 10) return;
+
+        const currentQ = questions[currentIndex];
+        const word = currentQ.answer;
+
+        if (word.length > 2) {
+            const randomIndex = Math.floor(Math.random() * (word.length - 1)) + 1;
+            const revealedChar = word.charAt(randomIndex).toUpperCase();
+            document.getElementById('hint-display').innerText = `💡 Pista: Contiene la letra "${revealedChar}" en la posición ${randomIndex + 1} (${word.length} letras en total)`;
+        } else {
+            document.getElementById('hint-display').innerText = `💡 Pista: La palabra tiene ${word.length} letras`;
+        }
+
+        timeLeft = Math.max(1, timeLeft - 10);
+        document.getElementById('timer').innerText = `⏱️ ${timeLeft}s`;
+        document.getElementById('btn-hint').disabled = true;
+    }
+
+    function useFreeze() {
+        freezeActive = true;
+        const btn = document.getElementById('btn-freeze');
+        btn.disabled = true;
+        setTimeout(() => { freezeActive = false; }, 10000);
+    }
+
+    function pasapalabra() { nextQuestion(); }
+
+    function nextQuestion() {
+        document.getElementById('btn-hint').disabled = false;
+        currentIndex = (currentIndex + 1) % questions.length;
+        loadQuestion();
+    }
+
+    function startTimer() {
+        const timerElement = document.getElementById('timer');
+        timerInterval = setInterval(() => {
+            if (!freezeActive) {
+                timeLeft--;
+                timerElement.innerText = `⏱️ ${timeLeft}s`;
+                if (timeLeft <= 0) endGame();
+            }
+        }, 1000);
+    }
+
+    function checkGameEnd() {
+        const completed = questions.every(q => q.status === 'correct' || q.status === 'wrong');
+        if (completed) { endGame(); return true; }
+        return false;
+    }
+
+    // PANTALLA FINAL CON REVISIÓN DE RESPUESTAS CORRECTAS
+    function endGame() {
+        clearInterval(timerInterval);
+        document.getElementById('game-main').style.display = 'none';
+        document.getElementById('end-screen').style.display = 'flex';
+
+        const myScore = hits * 10;
+        document.getElementById('final-stats').innerHTML = `
+            <strong>Puntuación Final:</strong> <span style="color: var(--accent-yellow);">${myScore} pts</span><br>
+            <strong>Aciertos:</strong> ${hits} ✅ | <strong>Errores:</strong> ${errors} ❌
+        `;
+
+        const reviewContainer = document.getElementById('answers-review');
+        reviewContainer.innerHTML = '';
+
+        questions.forEach(q => {
+            const userRes = userAnswers[q.letter];
+            const div = document.createElement('div');
+
+            if (userRes && userRes.isCorrect) {
+                div.className = 'review-item correct-item';
+                div.innerHTML = `<strong>[${q.letter}]</strong> Acertaste: <em>${userRes.input}</em> ✅`;
+            } else if (userRes && !userRes.isCorrect) {
+                div.className = 'review-item wrong-item';
+                div.innerHTML = `<strong>[${q.letter}]</strong> Dijiste: <em>"${userRes.input}"</em> ❌ | <strong>Correcta:</strong> <span style="color: var(--accent-green);">${q.answer.toUpperCase()}</span>`;
+            } else {
+                div.className = 'review-item wrong-item';
+                div.innerHTML = `<strong>[${q.letter}]</strong> Sin responder ⏱️ | <strong>Correcta:</strong> <span style="color: var(--accent-green);">${q.answer.toUpperCase()}</span>`;
+            }
+
+            reviewContainer.appendChild(div);
+        });
+    }
+
+    document.getElementById('answer-input').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') checkAnswer();
+    });
+</script>
+</body>
+</html>
