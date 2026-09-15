@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pasapalabra Extremo</title>
+    <title>Pasapalabra Extremo 🏆</title>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
         :root {
@@ -33,10 +33,10 @@
         }
 
         .game-container {
-            width: 90%;
-            max-width: 850px;
+            width: 95%;
+            max-width: 900px;
             background-color: var(--card-bg);
-            padding: 30px;
+            padding: 25px;
             border-radius: 20px;
             box-shadow: 0 10px 25px rgba(0,0,0,0.5);
             text-align: center;
@@ -87,6 +87,13 @@
             padding: 20px 0;
         }
 
+        .select-group {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
         .theme-select {
             padding: 10px 15px;
             font-size: 1rem;
@@ -95,7 +102,6 @@
             color: white;
             border: 2px solid #334155;
             cursor: pointer;
-            margin-bottom: 10px;
         }
 
         .mode-buttons {
@@ -119,17 +125,28 @@
         .btn-multi { background-color: var(--accent-purple); color: white; }
         .btn-mode:hover { transform: scale(1.05); }
 
+        /* ROSCO CON EMOJI AL CENTRO */
         .rosco-container {
             position: relative;
-            width: 320px;
-            height: 320px;
-            margin: 0 auto 30px auto;
+            width: 340px;
+            height: 340px;
+            margin: 0 auto 20px auto;
+        }
+
+        .emoji-center {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 4.5rem;
+            user-select: none;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         .letter-node {
             position: absolute;
-            width: 40px;
-            height: 40px;
+            width: 34px;
+            height: 34px;
             border-radius: 50%;
             background-color: #334155;
             color: white;
@@ -137,15 +154,16 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             transition: all 0.3s ease;
         }
 
         .letter-node.current {
             background-color: var(--accent-yellow);
             color: black;
-            transform: scale(1.25);
+            transform: scale(1.3);
             box-shadow: 0 0 15px var(--accent-yellow);
+            z-index: 10;
         }
 
         .letter-node.correct { background-color: var(--accent-green); }
@@ -185,30 +203,21 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 1.25rem;
-            font-weight: bold;
-            border: 2px solid transparent;
+            font-size: 1.15rem;
+            border: 2px solid #334155;
         }
 
         .hint-text {
             color: var(--accent-yellow);
             font-size: 0.95rem;
             margin-top: 8px;
-            font-weight: normal;
+            font-weight: bold;
         }
 
         .controls {
             display: flex;
             gap: 10px;
             justify-content: center;
-            align-items: center;
-        }
-
-        .math-symbol {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--accent-yellow);
-            display: none;
         }
 
         input[type="text"] {
@@ -220,7 +229,7 @@
             color: white;
             outline: none;
             flex-grow: 1;
-            max-width: 250px;
+            max-width: 300px;
         }
 
         button {
@@ -235,10 +244,34 @@
         .btn-submit { background-color: var(--accent-green); color: white; }
         .btn-pasapalabra { background-color: var(--accent-yellow); color: black; }
 
+        .leaderboard-box {
+            background-color: #0f172a;
+            padding: 15px;
+            border-radius: 12px;
+            width: 100%;
+            max-width: 400px;
+            margin-top: 15px;
+            border: 1px solid #334155;
+        }
+
+        .leaderboard-list {
+            list-style: none;
+            padding: 0;
+            margin: 10px 0 0 0;
+            text-align: left;
+        }
+
+        .leaderboard-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 10px;
+            border-bottom: 1px solid #1e293b;
+        }
+
         .answers-review {
             text-align: left;
             margin-top: 15px;
-            max-height: 200px;
+            max-height: 180px;
             overflow-y: auto;
             background-color: #0f172a;
             padding: 15px;
@@ -278,21 +311,35 @@
         </div>
     </header>
 
-    <!-- PANTALLA 1: Selección de Tema y Modo -->
+    <!-- PANTALLA 1: Configuración -->
     <div class="setup-section" id="mode-selector">
-        <h3>1. Elige una Temática:</h3>
-        <select id="theme-selector" class="theme-select">
-            <option value="ciencia">🔬 Ciencia y Naturaleza</option>
-            <option value="general">🌍 Cultura General</option>
-            <option value="cine">🎬 Entretenimiento y Cine</option>
-            <option value="tecnologia">💻 Tecnología y Código</option>
-            <option value="matematicas">📐 Matemáticas (Cálculo Mental)</option>
-        </select>
+        <h3>1. Opciones de Juego:</h3>
+        <div class="select-group">
+            <select id="theme-selector" class="theme-select">
+                <option value="ciencia">🔬 Ciencia y Naturaleza</option>
+                <option value="general">🌍 Cultura General</option>
+                <option value="cine">🎬 Entretenimiento y Cine</option>
+            </select>
 
-        <h3>2. Elige el Modo de Juego:</h3>
+            <select id="diff-selector" class="theme-select">
+                <option value="facil">🟢 Fácil (180s)</option>
+                <option value="normal" selected>🟡 Normal (120s)</option>
+                <option value="extremo">🔴 Extremo (60s | -10s error)</option>
+            </select>
+        </div>
+
+        <h3>2. Elige el Modo:</h3>
         <div class="mode-buttons">
             <button class="btn-mode btn-solo" onclick="startSinglePlayer()">👤 Modo Solitario</button>
             <button class="btn-mode btn-multi" onclick="showLobby()">⚔️ Modo Multijugador</button>
+        </div>
+
+        <!-- Tabla de posiciones -->
+        <div class="leaderboard-box">
+            <h4 style="margin: 0;">🏆 Tabla de Posiciones (Récords)</h4>
+            <ul class="leaderboard-list" id="leaderboard-list">
+                <li style="text-align: center; color: #94a3b8;">Sin récords aún</li>
+            </ul>
         </div>
     </div>
 
@@ -308,11 +355,15 @@
     <!-- PANTALLA 3: Tablero de Juego -->
     <div id="game-main" style="display: none;">
         <div class="powerups">
-            <button class="btn-powerup" id="btn-hint" onclick="useHint()">💡 Revelar Pista (-10s)</button>
+            <button class="btn-powerup" id="btn-hint" onclick="useHint()">💡 Revelar Letra (-10s)</button>
             <button class="btn-powerup" id="btn-freeze" onclick="useFreeze()">❄️ Congelar 10s</button>
         </div>
 
-        <div class="rosco-container" id="rosco"></div>
+        <div class="rosco-container">
+            <div id="rosco"></div>
+            <!-- EMOJI QUE HACE CARAS -->
+            <div class="emoji-center" id="emoji-face">😊</div>
+        </div>
 
         <div id="game-board">
             <div class="question-box">
@@ -321,7 +372,6 @@
             </div>
 
             <div class="controls">
-                <span class="math-symbol" id="math-symbol">=</span>
                 <input type="text" id="answer-input" placeholder="Escribe tu respuesta..." autocomplete="off">
                 <button class="btn-submit" onclick="checkAnswer()">Responder 🎯</button>
                 <button class="btn-pasapalabra" onclick="pasapalabra()">Pasapalabra 🔄</button>
@@ -329,7 +379,7 @@
         </div>
     </div>
 
-    <!-- PANTALLA 4: Resultados y Revisión -->
+    <!-- PANTALLA 4: Resultados -->
     <div class="setup-section" id="end-screen" style="display: none;">
         <h3 id="end-title">🏆 ¡Fin de la Partida!</h3>
         <div id="final-stats" style="font-size: 1.2rem;"></div>
@@ -342,46 +392,134 @@
 </div>
 
 <script>
+    // GENERADOR DE EFECTOS DE SONIDO (WEB AUDIO API)
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSound(type) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        if (type === 'correct') {
+            osc.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+            osc.frequency.exponentialRampToValueAtTime(659.25, audioCtx.currentTime + 0.1); // E5
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        } else if (type === 'wrong') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(180, audioCtx.currentTime);
+            osc.frequency.linearRampToValueAtTime(110, audioCtx.currentTime + 0.2);
+            gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.3);
+        } else if (type === 'freeze') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(800, audioCtx.currentTime);
+            osc.frequency.exponentialRampToValueAtTime(400, audioCtx.currentTime + 0.4);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.4);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.4);
+        } else if (type === 'win') {
+            osc.frequency.setValueAtTime(440, audioCtx.currentTime);
+            osc.frequency.setValueAtTime(554.37, audioCtx.currentTime + 0.15);
+            osc.frequency.setValueAtTime(659.25, audioCtx.currentTime + 0.3);
+            gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.6);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.6);
+        }
+    }
+
     let socket = null;
     let isMultiplayer = false;
     let currentGameId = null;
 
-    // BANCO DE DATOS
+    // PREGUNTAS COMPLETA (A a la Z)
     const themesData = {
         ciencia: [
-            { letter: 'A', question: 'Empieza por A: Vaso sanguíneo que lleva sangre desde el corazón.', answer: 'arteria' },
-            { letter: 'B', question: 'Empieza por B: El mamífero más grande del planeta.', answer: 'ballena' },
-            { letter: 'C', question: 'Empieza por C: Unidad básica de todos los seres vivos.', answer: 'celula' },
-            { letter: 'D', question: 'Empieza por D: Reptiles extintos de la era Mesozoica.', answer: 'dinosaurio' },
-            { letter: 'E', question: 'Empieza por E: Esfera de gas que genera luz por fusión nuclear.', answer: 'estrella' }
+            { letter: 'A', question: 'Vaso sanguíneo que lleva sangre desde el corazón.', answer: 'arteria' },
+            { letter: 'B', question: 'Mamífero más grande del planeta.', answer: 'ballena' },
+            { letter: 'C', question: 'Unidad básica de todos los seres vivos.', answer: 'celula' },
+            { letter: 'D', question: 'Reptiles extintos de la era Mesozoica.', answer: 'dinosaurio' },
+            { letter: 'E', question: 'Esfera de gas que genera luz por fusión nuclear.', answer: 'estrella' },
+            { letter: 'F', question: 'Proceso por el cual las plantas convierten luz en energía.', answer: 'fotosintesis' },
+            { letter: 'G', question: 'Fuerza que atrae los cuerpos hacia la Tierra.', answer: 'gravedad' },
+            { letter: 'H', question: 'Elemento químico más abundante del universo.', answer: 'hidrogeno' },
+            { letter: 'I', question: 'Órgano que procesa la comida después del estómago.', answer: 'intestino' },
+            { letter: 'J', question: 'Planeta más grande del sistema solar.', answer: 'jupiter' },
+            { letter: 'K', question: 'Unidad de medida de la temperatura absoluta.', answer: 'kelvin' },
+            { letter: 'L', question: 'Satélite natural de la Tierra.', answer: 'luna' },
+            { letter: 'M', question: 'Organismo microscópico como bacterias o virus.', answer: 'microbio' },
+            { letter: 'N', question: 'Centro de la célula donde está el ADN.', answer: 'nucleo' },
+            { letter: 'O', question: 'Gas indispensable para la respiración humana.', answer: 'oxigeno' },
+            { letter: 'P', question: 'Partícula atómica con carga positiva.', answer: 'proton' },
+            { letter: 'Q', question: 'Ciencia que estudia la composición de la materia.', answer: 'quimica' },
+            { letter: 'R', question: 'Emisión de energía en forma de ondas o partículas.', answer: 'radiacion' },
+            { letter: 'S', question: 'Estrella central de nuestro sistema planetario.', answer: 'sol' },
+            { letter: 'T', question: 'Tercer planeta desde el Sol.', answer: 'tierra' },
+            { letter: 'U', question: 'Todo lo que existe: espacio, tiempo y materia.', answer: 'universo' },
+            { letter: 'V', question: 'Conducto por donde la sangre regresa al corazón.', answer: 'vena' },
+            { letter: 'W', question: 'Unidad de potencia eléctrica en el sistema internacional.', answer: 'vatio' },
+            { letter: 'X', question: 'Gas noble usado en lámparas e iluminación.', answer: 'xenon' },
+            { letter: 'Y', question: 'Elemento químico esencial para la tiroides.', answer: 'yodo' },
+            { letter: 'Z', question: 'Ciencia que estudia a los animales.', answer: 'zoologia' }
         ],
         general: [
-            { letter: 'A', question: 'Empieza por A: Océano que separa América de Europa y África.', answer: 'atlantico' },
-            { letter: 'B', question: 'Empieza por B: Capital de Argentina.', answer: 'buenos aires' },
-            { letter: 'C', question: 'Empieza por C: País cuya capital es Ottawa.', answer: 'canada' },
-            { letter: 'D', question: 'Empieza por D: Moneda oficial de los Estados Unidos.', answer: 'dolar' },
-            { letter: 'E', question: 'Empieza por E: Montaña más alta del mundo sobre el nivel del mar.', answer: 'everest' }
+            { letter: 'A', question: 'Océano que separa América de Europa.', answer: 'atlantico' },
+            { letter: 'B', question: 'Capital de Argentina.', answer: 'buenos aires' },
+            { letter: 'C', question: 'País cuya capital es Ottawa.', answer: 'canada' },
+            { letter: 'D', question: 'Moneda oficial de los Estados Unidos.', answer: 'dolar' },
+            { letter: 'E', question: 'Montaña más alta del mundo.', answer: 'everest' },
+            { letter: 'F', question: 'País de la Torre Eiffel.', answer: 'francia' },
+            { letter: 'G', question: 'Instrumento musical de seis cuerdas.', answer: 'guitarra' },
+            { letter: 'H', question: 'Idioma oficial de Grecia.', answer: 'griego' },
+            { letter: 'I', question: 'País con forma de bota en Europa.', answer: 'italia' },
+            { letter: 'J', question: 'País asiático conocido como el Sol Naciente.', answer: 'japon' },
+            { letter: 'K', question: 'Arte marcial coreano enfocado en patadas.', answer: 'taekwondo' },
+            { letter: 'L', question: 'Capital de Perú.', answer: 'lima' },
+            { letter: 'M', question: 'Capital de España.', answer: 'madrid' },
+            { letter: 'N', question: 'Río más largo del mundo ubicado en África.', answer: 'nilo' },
+            { letter: 'O', question: 'Mascota pulpo con ocho brazos.', answer: 'pulpo' },
+            { letter: 'P', question: 'Lugar donde se guardan los libros para lectura.', answer: 'biblioteca' },
+            { letter: 'Q', question: 'Alimento derivado de la leche.', answer: 'queso' },
+            { letter: 'R', question: 'Capital de Italia.', answer: 'roma' },
+            { letter: 'S', question: 'País sudamericano con capital en Berna no, Montevideo.', answer: 'uruguay' },
+            { letter: 'T', question: 'Monumento famoso de la India: Taj...', answer: 'mahal' },
+            { letter: 'U', question: 'Organización de las Naciones...', answer: 'unidas' },
+            { letter: 'V', question: 'Ciudad de los canales en Italia.', answer: 'venecia' },
+            { letter: 'W', question: 'Capital de Estados Unidos (Washington...).', answer: 'dc' },
+            { letter: 'X', question: 'Instrumento musical de láminas de madera o metal.', answer: 'xilofono' },
+            { letter: 'Y', question: 'Barco de lujo o recreo.', answer: 'yate' },
+            { letter: 'Z', question: 'Lugar donde se exhiben animales salvajes.', answer: 'zoologico' }
         ],
         cine: [
-            { letter: 'A', question: 'Empieza por A: Película con la mayor recaudación de la historia (Na\'vi).', answer: 'avatar' },
-            { letter: 'B', question: 'Empieza por B: El caballero de la noche en Gotham.', answer: 'batman' },
-            { letter: 'C', question: 'Empieza por C: Nombre del robot dorado en Star Wars.', answer: 'c3po' },
-            { letter: 'D', question: 'Empieza por D: Estudio de animación famoso por Mickey Mouse.', answer: 'disney' },
-            { letter: 'E', question: 'Empieza por E: Extraterrestre que quería llamar a su casa.', answer: 'et' }
-        ],
-        tecnologia: [
-            { letter: 'A', question: 'Empieza por A: Sistema operativo móvil desarrollado por Google.', answer: 'android' },
-            { letter: 'B', question: 'Empieza por B: Conjunto de 8 bits.', answer: 'byte' },
-            { letter: 'C', question: 'Empieza por C: Estilo en cascada usado para diseñar páginas web (Siglas).', answer: 'css' },
-            { letter: 'D', question: 'Empieza por D: Estructura organizada de datos almacenada en un servidor.', answer: 'base de datos' },
-            { letter: 'E', question: 'Empieza por E: Mensaje de correo enviado por red de computadoras.', answer: 'email' }
-        ],
-        matematicas: [
-            { letter: '1', question: 'Resuelve la operación: 45 + 38', answer: '83', isMath: true },
-            { letter: '2', question: 'Resuelve la operación: 120 - 45', answer: '75', isMath: true },
-            { letter: '3', question: 'Resuelve la operación: 12 x 6', answer: '72', isMath: true },
-            { letter: '4', question: 'Resuelve la operación: 144 / 12', answer: '12', isMath: true },
-            { letter: '5', question: 'Resuelve la operación: 25 x 4', answer: '100', isMath: true }
+            { letter: 'A', question: 'Película más taquillera ambientada en Pandora.', answer: 'avatar' },
+            { letter: 'B', question: 'El caballero de la noche en Gotham.', answer: 'batman' },
+            { letter: 'C', question: 'Nombre del robot dorado en Star Wars.', answer: 'c3po' },
+            { letter: 'D', question: 'Estudio famoso por Mickey Mouse.', answer: 'disney' },
+            { letter: 'E', question: 'Extraterrestre que quería llamar a su casa.', answer: 'et' },
+            { letter: 'F', question: 'Saga de carreras callejeras: Rápido y...', answer: 'furioso' },
+            { letter: 'G', question: 'Monstruo gigante japonés que lanza rayo atómico.', answer: 'godzilla' },
+            { letter: 'H', question: 'Joven mago con cicatriz de rayo.', answer: 'harry potter' },
+            { letter: 'I', question: 'Arqueólogo del látigo: Indiana...', answer: 'jones' },
+            { letter: 'J', question: 'Tiburón gigante en la película de Spielberg.', answer: 'jaws' },
+            { letter: 'K', question: 'Gorila gigante que escala el Empire State.', answer: 'king kong' },
+            { letter: 'L', question: 'Rey de la selva animado de Disney.', answer: 'rey leon' },
+            { letter: 'M', question: 'Plataforma con el fontanero de la película de animación.', answer: 'mario' },
+            { letter: 'N', question: 'Pecesito payaso buscado por su padre.', answer: 'nemo' },
+            { letter: 'O', question: 'Premios más famosos del cine.', answer: 'oscar' },
+            { letter: 'P', question: 'Oso panda experto en Kung Fu.', answer: 'po' },
+            { letter: 'Q', question: 'Director de Pulp Fiction: Quentin...', answer: 'tarantino' },
+            { letter: 'R', question: 'Robot del futuro: The...', answer: 'terminator' },
+            { letter: 'S', question: 'Héroe de traje rojo y azul que lanza telarañas.', answer: 'spiderman' },
+            { letter: 'T', question: 'Barco gigante que se hundió en 1912.', answer: 'titanic' },
+            { letter: 'U', question: 'Nave espacial en la película Alien.', answer: 'nostromo' },
+            { letter: 'V', question: 'Villano con máscara negra en Star Wars: Darth...', answer: 'vader' },
+            { letter: 'W', question: 'Ogro verde de DreamWorks.', answer: 'shrek' },
+            { letter: 'X', question: 'Mutantes del Profesor Xavier: X-...', answer: 'men' },
+            { letter: 'Y', question: 'Maestro Jedi verde y pequeño.', answer: 'yoda' },
+            { letter: 'Z', question: 'Zorro, el héroe de la espada y la...', answer: 'z' }
         ]
     };
 
@@ -393,9 +531,40 @@
     let timerInterval = null;
     let freezeActive = false;
     let userAnswers = {};
+    let errorPenalty = 0;
 
     function normalizeText(text) {
         return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+    }
+
+    function setEmoji(face) {
+        const el = document.getElementById('emoji-face');
+        el.innerText = face;
+        el.style.transform = 'translate(-50%, -50%) scale(1.3)';
+        setTimeout(() => el.style.transform = 'translate(-50%, -50%) scale(1)', 300);
+    }
+
+    function loadLeaderboard() {
+        const scores = JSON.parse(localStorage.getItem('pasapalabra_scores') || '[]');
+        const list = document.getElementById('leaderboard-list');
+        if (scores.length === 0) {
+            list.innerHTML = '<li style="text-align: center; color: #94a3b8;">Sin récords aún</li>';
+            return;
+        }
+        list.innerHTML = scores.map((s, i) => `
+            <li class="leaderboard-item">
+                <span>#${i+1} ${s.name}</span>
+                <span style="color: var(--accent-yellow); font-weight: bold;">${s.score} pts</span>
+            </li>
+        `).join('');
+    }
+
+    function saveScore(name, score) {
+        let scores = JSON.parse(localStorage.getItem('pasapalabra_scores') || '[]');
+        scores.push({ name, score });
+        scores.sort((a, b) => b.score - a.score);
+        scores = scores.slice(0, 5); // Guardar solo Top 5
+        localStorage.setItem('pasapalabra_scores', JSON.stringify(scores));
     }
 
     function getSelectedQuestions() {
@@ -406,7 +575,12 @@
     function startSinglePlayer() {
         isMultiplayer = false;
         questions = getSelectedQuestions();
-        
+
+        const diff = document.getElementById('diff-selector').value;
+        if (diff === 'facil') { timeLeft = 180; errorPenalty = 0; }
+        else if (diff === 'normal') { timeLeft = 120; errorPenalty = 0; }
+        else if (diff === 'extremo') { timeLeft = 60; errorPenalty = 10; }
+
         document.getElementById('mode-selector').style.display = 'none';
         document.getElementById('match-panel').style.display = 'flex';
         document.getElementById('timer-box').style.display = 'block';
@@ -436,7 +610,6 @@
 
         if (typeof io !== 'undefined') {
             socket = io();
-
             socket.on('connect', () => {
                 socket.emit('join_game', { name: name, theme: document.getElementById('theme-selector').value });
             });
@@ -466,10 +639,8 @@
             });
 
             socket.on('connect_error', () => {
-                document.getElementById('lobby-status').innerText = "❌ Servidor no encontrado. ¿Está corriendo server.js?";
+                document.getElementById('lobby-status').innerText = "❌ No se pudo conectar al servidor Node.js.";
             });
-        } else {
-            alert("Error: No se pudo cargar Socket.io.");
         }
     }
 
@@ -477,12 +648,12 @@
         const container = document.getElementById('rosco');
         container.innerHTML = '';
         const total = questions.length;
-        const radius = 130;
+        const radius = 135;
 
         questions.forEach((q, index) => {
             const angle = (index / total) * 2 * Math.PI - (Math.PI / 2);
-            const x = Math.round(140 + radius * Math.cos(angle));
-            const y = Math.round(140 + radius * Math.sin(angle));
+            const x = Math.round(150 + radius * Math.cos(angle));
+            const y = Math.round(150 + radius * Math.sin(angle));
 
             const node = document.createElement('div');
             node.className = 'letter-node';
@@ -512,22 +683,11 @@
 
         const q = questions[currentIndex];
         document.getElementById(`node-${q.letter}`).classList.add('current');
-        document.getElementById('question').innerText = q.question;
+        document.getElementById('question').innerText = `Empieza por ${q.letter}: ${q.question}`;
         document.getElementById('hint-display').innerText = '';
-        
-        const input = document.getElementById('answer-input');
-        const symbol = document.getElementById('math-symbol');
-
-        if (q.isMath) {
-            symbol.style.display = 'inline';
-            input.placeholder = "Número...";
-        } else {
-            symbol.style.display = 'none';
-            input.placeholder = "Escribe tu respuesta...";
-        }
-
-        input.value = '';
-        input.focus();
+        document.getElementById('answer-input').value = '';
+        document.getElementById('answer-input').focus();
+        setEmoji('🤔');
     }
 
     function checkAnswer() {
@@ -538,22 +698,21 @@
         const isCorrect = normalizeText(input) === normalizeText(currentQ.answer);
         const node = document.getElementById(`node-${currentQ.letter}`);
 
-        userAnswers[currentQ.letter] = {
-            question: currentQ.question,
-            input: input,
-            correctAnswer: currentQ.answer,
-            isCorrect: isCorrect
-        };
+        userAnswers[currentQ.letter] = { input: input, correctAnswer: currentQ.answer, isCorrect: isCorrect };
 
         if (isCorrect) {
             currentQ.status = 'correct';
             node.classList.add('correct');
             hits++;
+            playSound('correct');
+            setEmoji('🎉');
         } else {
             currentQ.status = 'wrong';
             node.classList.add('wrong');
             errors++;
-            timeLeft = Math.max(0, timeLeft - 5);
+            playSound('wrong');
+            setEmoji('😱');
+            if (errorPenalty > 0) timeLeft = Math.max(0, timeLeft - errorPenalty);
         }
 
         const currentScore = hits * 10;
@@ -563,7 +722,7 @@
             socket.emit('submit_answer', { gameId: currentGameId, score: currentScore });
         }
 
-        nextQuestion();
+        setTimeout(() => nextQuestion(), 400);
     }
 
     function useHint() {
@@ -572,17 +731,12 @@
         const currentQ = questions[currentIndex];
         const word = currentQ.answer;
 
-        if (currentQ.isMath) {
-            const lastDigit = word.slice(-1);
-            document.getElementById('hint-display').innerText = `💡 Pista: El resultado tiene ${word.length} dígitos y termina en "${lastDigit}"`;
+        if (word.length > 2) {
+            const randomIndex = Math.floor(Math.random() * (word.length - 1)) + 1;
+            const revealedChar = word.charAt(randomIndex).toUpperCase();
+            document.getElementById('hint-display').innerText = `💡 Pista: Contiene "${revealedChar}" en la pos ${randomIndex + 1} (${word.length} letras)`;
         } else {
-            if (word.length > 2) {
-                const randomIndex = Math.floor(Math.random() * (word.length - 1)) + 1;
-                const revealedChar = word.charAt(randomIndex).toUpperCase();
-                document.getElementById('hint-display').innerText = `💡 Pista: Contiene la letra "${revealedChar}" en la posición ${randomIndex + 1} (${word.length} letras)`;
-            } else {
-                document.getElementById('hint-display').innerText = `💡 Pista: La palabra tiene ${word.length} letras`;
-            }
+            document.getElementById('hint-display').innerText = `💡 Pista: La palabra tiene ${word.length} letras`;
         }
 
         timeLeft = Math.max(1, timeLeft - 10);
@@ -592,12 +746,17 @@
 
     function useFreeze() {
         freezeActive = true;
+        playSound('freeze');
+        setEmoji('🥶');
         const btn = document.getElementById('btn-freeze');
         btn.disabled = true;
-        setTimeout(() => { freezeActive = false; }, 10000);
+        setTimeout(() => { freezeActive = false; setEmoji('🤔'); }, 10000);
     }
 
-    function pasapalabra() { nextQuestion(); }
+    function pasapalabra() { 
+        setEmoji('😏');
+        nextQuestion(); 
+    }
 
     function nextQuestion() {
         document.getElementById('btn-hint').disabled = false;
@@ -624,10 +783,17 @@
 
     function endGame() {
         clearInterval(timerInterval);
+        playSound('win');
+        setEmoji('💀');
+
         document.getElementById('game-main').style.display = 'none';
         document.getElementById('end-screen').style.display = 'flex';
 
         const myScore = hits * 10;
+        const myName = document.getElementById('player-name').value.trim() || 'Jugador Solitario';
+        
+        saveScore(myName, myScore);
+
         document.getElementById('final-stats').innerHTML = `
             <strong>Puntuación Final:</strong> <span style="color: var(--accent-yellow);">${myScore} pts</span><br>
             <strong>Aciertos:</strong> ${hits} ✅ | <strong>Errores:</strong> ${errors} ❌
@@ -658,7 +824,9 @@
     document.getElementById('answer-input').addEventListener('keypress', function (e) {
         if (e.key === 'Enter') checkAnswer();
     });
+
+    // Cargar Récords al abrir
+    loadLeaderboard();
 </script>
 </body>
 </html>
-
